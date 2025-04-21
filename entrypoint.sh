@@ -1,8 +1,8 @@
 #!/bin/env bash
 
 # Define default values
+DEFAULT_NORMAL_PATH="\/(([a-zA-Z]+(\/.*)?([a-zA-Z]+\.html))|(assets(\/.*)+)|(favicon\.(ico|svg)))?"
 DEFAULT_NORMAL_METHODS="GET"
-DEFAULT_NORMAL_PATH="\/((fonts|images|favicon\.[a-zA-Z]+)(\/.*)+)?(\?[0-9a-zA-Z]+=[0-9a-zA-Z]+(\&[0-9a-zA-Z]+=[0-9a-zA-Z]+)*)?"
 DEFAULT_NORMAL_STATUS="200,301"
 DEFAULT_MAX_SUS_IPS_NUM=10
 DEFAULT_MAX_SUS_REQS_NUM=10

@@ -21,6 +21,21 @@ bash entrypoint.sh access.log -m 'POST,GET'
 bash entrypoint.sh access.log -s '200,301'
 ```
 
+> [!TIP]
+> If you want to see which paths are being excluded by default, test [this regex](https://regex101.com/r/8l0gyt/1) to see the paths that are being excluded by default. If you are not getting the behavior you expect, you can use the `-p` flag to override the default behavior with your own regex pattern.
+
+By default, the script will look for the following patterns:
+
+- paths that are not any of the following:
+  - `/`
+  - `/index.html`
+  - `/index/foo/bar.html`
+  - `/assets/fonts/font.otf`
+  - `/assets/images/logo.webp`
+  - `/favicon.ico`
+- requests that are not GET requests
+- requests that are not 200 or 301 status codes
+
 For more options, run the script with the `-h` flag:
 
 ```bash
