@@ -1,5 +1,7 @@
 # basset
 
+[![CI/CD](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml/badge.svg)](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml)
+
 A bash script that reads your nginx access logs and generates a report of suspicious activity.
 
 ## usage
