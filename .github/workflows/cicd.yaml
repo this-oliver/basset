@@ -20,14 +20,6 @@ jobs:
         id: secrets
         uses: trufflesecurity/trufflehog@690e5c7aff8347c3885096f3962a0633d9129607 # v3.88.23
 
-      - name: Scan for vulnerable code
-        id: code
-        uses: bearer/bearer-action@828eeb928ce2f4a7ca5ed57fb8b59508cb8c79bc # v2
-        with:
-          diff: true
-          severity: 'critical,high'
-          exit-code: '1'
-
       - name: Scan for vulnerable dependencies
         uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
         id: deps
