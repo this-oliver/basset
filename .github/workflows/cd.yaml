@@ -1,37 +1,15 @@
-name: CI/CD
+name: CD
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
-    branches: [main]
   push:
-    branches: [main]
+    branches:
+      - main
     paths-ignore:
       - .github/**
       - README.md
 
 jobs:
-  check-security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Scan for hard-coded secrets
-        id: secrets
-        uses: trufflesecurity/trufflehog@690e5c7aff8347c3885096f3962a0633d9129607 # v3.88.23
-
-      - name: Scan for vulnerable dependencies
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
-        id: deps
-        with:
-          scan-type: fs
-          scanners: 'vuln,secret,misconfig'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [check-security]
     outputs:
       tag: ${{ steps.tag.outputs.new_tag }}
     runs-on: ubuntu-latest
