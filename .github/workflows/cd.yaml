@@ -2,6 +2,10 @@ name: Continuous Deployment
 on:
   push:
     branches: [main]
+<<<<<<< HEAD
+=======
+  workflow_dispatch:
+>>>>>>> c3c89f7 (chore: use release-please for releases in deployment workflow)
 
 jobs:
   release:
