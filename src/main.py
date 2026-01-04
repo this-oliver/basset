@@ -10,6 +10,74 @@ DEFAULT_METHODS = "GET"
 DEFAULT_STATUS = "200,301"
 HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE"]
 
+def extract_ip(log_line: str) -> Union[str, None]:
+  """Extracts the IP address from an Nginx log line."""
+  match = re.match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', log_line)
+  return match.group(1) if match else None
+
+def extract_method(log_line: str) -> Union[str, None]:
+  """Extracts HTTP method from an Nginx log line"""
+  pattern = f'({"|".join(HTTP_METHODS)}) \\/'
+  matches = re.findall(pattern, log_line)
+
+  if matches is None or len(matches) == 0:
+    return None
+  
+  return matches[0].split()[0]
+
+def extract_path(log_line: str) -> Union[str, None]:
+  """Extracts the request path/endpoint from an Nginx log line."""
+  match = re.search(r'(?<=").+HTTP\/\d\.\d"', log_line) # Match anything in quotes after request
+
+  if match is None:
+    return None
+
+  endpoint = match[0]
+  items = endpoint.split(" ")
+  items = items[1:]
+
+  endpoint_without_method = " ".join(items)
+  match = re.search(r'.+(?=HTTP\/\d\.\d")', endpoint_without_method)
+  return match[0] if match is not None else None
+
+def extract_status_code(log_line: str) -> Union[str, None]:
+  """Extracts the HTTP status code from an Nginx log line."""
+  match = re.search(r'(?<=(HTTP\/1.0|HTTP\/1.1|HTTP\/2.0)" )[0-9]+', log_line) # Match 3 digit code after HTTP protocol
+
+  if match is None:
+    match = re.search(r'(?<=" )[0-9]+', log_line) # Match 3 digit code after HTTP protocol quotation
+
+  return match[0] if match else None
+
+def extract_size(log_line: str) -> Union[str, None]:
+  """Extracts the response size in bytes from an Nginx log"""
+  match = re.search(r'/(?<=(HTTP\/1.0|HTTP\/1.1|HTTP\/2.0)" )[0-9]+ [0-9]+', log_line) # Match multi two sets of digits after HTTP protocol
+
+  if match is None:
+    match = re.search(r'(?<=" )[0-9]+ [0-9]+', log_line) # Match multi two sets of digits after HTTP protocol quotation
+
+  return match[0].split(" ")[1] if match else None
+
+def extract_agent(log_line: str) -> Union[str, None]:
+  """Extracts the user agent string and attempts to identify the device from it."""
+  match = re.search(r'(?<=" ").+(?="$)', log_line)
+  user_agent = match[0] if match else None
+  if user_agent:
+    if "Android" in user_agent:
+      return "Android"
+    elif "iPhone" in user_agent or "iPad" in user_agent:
+      return "iOS"
+    elif "Windows" in user_agent:
+      return "Windows"
+    elif "Mac" in user_agent:
+      return "Mac"
+    elif "-" == user_agent:
+      return "N/A"
+    else:
+      match = re.search(r'(?<=\()[a-zA-Z0-9\s\.:;\-\/_]+(?=\))', user_agent)
+      return match[0] if match else "Unknown"
+  return None
+
 def get_logs(path: str) -> List[str]:
     if not os.path.exists(path):
        raise ValueError(f"File {path} does not exist")
@@ -17,58 +85,23 @@ def get_logs(path: str) -> List[str]:
     with open(path, 'r') as content:
       return [line.split("\n")[0] for line in content.readlines()]
 
-def get_log_ip(log: str) -> Union[str, None]:
-   pattern = r'^([0-9]{1,3}[.]){3}[0-9]{1,3}'
-   matches = re.search(pattern, log)
-
-   if matches is None:
-    return None
-   
-   return matches[0]
-
-def get_log_method(log: str) -> Union[str, None]:
-  pattern = f'({"|".join(HTTP_METHODS)}) \\/'
-  matches = re.findall(pattern, log)
-
-  if matches is None or len(matches) == 0:
-    return None
-  
-  return matches[0].split()[0]
-
-def get_log_path(log: str) -> Union[str, None]:
-  """
-  TODO: find a better (not hard-coded) solution.
-
-  This function tries to extract the path `/ HTTP/1.1` from the log `<IP Address> - - [DD/MMM/YYY:00:00:00 +0000] "GET / HTTP/1.1" 200 60880 "-" "Browser <DEVICE>"`
-  by splitting the log by spaces so that it lookes like `['<IP Address>', '-', '-', '[DD/MMM/YYY:00:00:00', '+0000]', '"GET', '/', 'HTTP/1.1"', '200', '60880', '"-"', '"Browser', '<DEVICE>"']`
-  and then removing all items up to the `/` that indicates the beggining of the path. These items are usually found at the 6th index in the list (HARD_CODED).
-
-  After removing the first 6 items, the function rejoins the remaining items so that they look like `/ HTTP/1.1" 200 60880 "-" "Browser <DEVICE>"` and then it
-  splits this new string by `"` to get everything up to the quotation mark before the status code.
-  """
-  result = None
-
-  # splits log by spaces
-  items = log.split(" ")
-  
-  # removes the first 6 items (see the functon docs for an explanation on the hard coded '6')
-  if items and len(items) >= 6:
-    items = items[6:]
-
-  # rejojin the items and then immedietly split by `"` and extract the first item (see function docs for more info)
-  items = " ".join(items).split("\"")
-  if items and len(items) >= 1:
-    result = items[0]
-
-  return result
-
 def find_logs_with_approved_methods(logs: List[str], approved_methods: List[str], inverse: bool = False) -> List[str]:
   matching_logs = []
   for log in logs:
-    current_method = get_log_method(log)
+    current_method = extract_method(log)
     if inverse and current_method not in approved_methods:
       matching_logs.append(log)
     elif inverse is False and current_method in approved_methods:
+      matching_logs.append(log)
+  return matching_logs
+  
+def find_logs_with_approved_status(logs: List[str], approved_status_codes: List[int], inverse: bool = False) -> List[str]:
+  matching_logs = []
+  for log in logs:
+    current_status = extract_status_code(log)
+    if inverse and current_status not in approved_status_codes:
+      matching_logs.append(log)
+    elif inverse is False and current_status in approved_status_codes:
       matching_logs.append(log)
   return matching_logs
    
@@ -78,9 +111,10 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
   if verbose is not True:
     processed_logs = []
     for log in logs:
-        ip = get_log_ip(log)
-        method = get_log_method(log)
-        processed_logs.append(f"{ip} - {method}")
+        ip = extract_ip(log)
+        method = extract_method(log)
+        path = extract_path(log)
+        processed_logs.append(f"{ip} - {method} - {path}")
     logs = processed_logs
   
   if len(logs) > max_logs:
@@ -119,6 +153,7 @@ if __name__ == "__main__":
 
     try:
       logs = get_logs(args.file)
+          
       reports = []
 
       sus_methods = find_logs_with_approved_methods(logs=logs, approved_methods=methods, inverse=True)
