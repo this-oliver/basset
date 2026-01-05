@@ -47,18 +47,26 @@ class LogExtractor:
 
   def get_path(self, log_line: str) -> Union[str, None]:
     """Extracts the request path/endpoint from an Nginx log line."""
-    match = re.search(r'(?<=").+HTTP\/\d\.\d"', log_line) # Match anything in quotes after request
-
-    if match is None:
+    whole_path = re.search(r'(?<=] ").+(?=" \d)', log_line) # Match everything between the quotes after the date's `]` and the first digit in the status code
+    
+    if whole_path is None:
       return None
+    
+    whole_path = whole_path.group(0)
 
-    endpoint = match[0]
-    items = endpoint.split(" ")
-    items = items[1:]
+    # remove method if it exists
+    if whole_path.upper().startswith(tuple(HTTP_METHODS)):
+      items = whole_path.split(" ")[1:]
+      whole_path = " ".join(items)
 
-    endpoint_without_method = " ".join(items)
-    match = re.search(r'.+(?=HTTP\/\d\.\d")', endpoint_without_method)
-    return match[0] if match is not None else None
+    # remove the protocol if it exists
+    protocol = re.search(r'HTTP\/\d+\.\d+', whole_path)
+    if protocol is not None:
+      items = whole_path.split(" ")
+      items.pop()
+      whole_path = " ".join(items)
+
+    return whole_path.strip()
 
   def get_status_code(self, log_line: str) -> Union[str, None]:
     """Extracts the HTTP status code from an Nginx log line."""
