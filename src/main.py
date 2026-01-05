@@ -185,9 +185,12 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
         processed_logs.append(f"{ip} - {method} - {path}")
     logs = processed_logs
   
-  if len(logs) > max_logs:
+  if len(logs) > max_logs and verbose is False:
     logs = logs[:max_logs]
     logs.append(f"... ({get_formatted_number(count - max_logs)} more)")
+  else:
+    logs.append(f"\n\n(Total: {get_formatted_number(len(logs))})")
+
 
   if len(logs) > 0:
     logs = "\n".join(logs)
