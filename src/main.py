@@ -19,6 +19,7 @@ def get_logs(path: str) -> List[str]:
   
   with open(path, 'r') as content:
     return [line.split("\n")[0] for line in content.readlines()]
+
 class LogExtractor:
   def get_ip(self, log_line: str) -> Union[str, None]:
     """Extracts the IP address from an Nginx log line."""
@@ -146,6 +147,31 @@ class LogAnalyzer:
         matching_logs.append(log)
     return matching_logs
 
+  def find_sus_paths(self) -> List[str]:
+    matching_logs = []
+    for log in self.logs:
+      current_path = self.extractor.get_path(log)
+      if current_path is None or current_path.strip() == "":
+        matching_logs.append(log) # if you cant find a valid path, its sus
+        continue
+      sus_file = re.findall(r'(?<=\/)[\w|\d]*\.[\w|\d]*', current_path)
+      if sus_file is None or len(sus_file) == 0:
+        continue # sus file not found, skip to next log
+      sus_file = str(sus_file[0].lower().strip())
+      if sus_file.endswith(".html"):
+        continue # this is most likely a normal HTML file
+      elif sus_file.endswith((".jpg", ".jpeg", ".png", ".svg", ".webp", ".ico", ".gif", ".mp3", ".mp4", ".mov", ".avi", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip")):
+        continue # this is most likely a normal media file
+      elif current_path.startswith(("/_nuxt/", "/api/_nuxt/", "/api/_nuxt_icon")) and sus_file.endswith((".js", ".json", ".css")):
+        continue # this is most likely a bundled js file
+      elif sus_file.endswith(".php") and sus_file not in ["config.php", "db.php", "auth.php", "shell.php", "cmd.php", "backup.php", "connect.php", "index_backup.php", "main.php", "upload.php", "reset.php", "install.php"]:
+        continue # this is most likely a normal php file
+      elif sus_file.find("\\") != -1:
+        matching_logs.append(log) # a backwards slash is super sus, could be obfuscated malicious commands
+      else:
+        matching_logs.append(log)
+    return matching_logs
+
 def report(title: str, description: str, logs: List[str], max_logs: int = 10, verbose: bool = False) -> str:
   extractor = LogExtractor()
   count = len(logs)
@@ -197,19 +223,24 @@ if __name__ == "__main__":
       analyzer = LogAnalyzer(logs=get_logs(args.file), verbose=verbose)
       reports = []
 
-      sus_methods = analyzer.find_logs_with_approved_methods(approved_methods=methods, inverse=True)
       reports.append(report(
           title="Suspicious Methods",
           description=f"Logs with HTTP methods that are not {','.join(methods)}",
-          logs=sus_methods,
+          logs=analyzer.find_logs_with_approved_methods(approved_methods=methods, inverse=True),
           verbose=verbose
       ))
 
-      sus_status = analyzer.find_logs_with_approved_status(approved_status_codes=status_codes, inverse=True)
       reports.append(report(
           title="Suspicious Status",
           description=f"Logs with HTTP status codes that are not {','.join(status_codes)}",
-          logs=sus_methods,
+          logs=analyzer.find_logs_with_approved_status(approved_status_codes=status_codes, inverse=True),
+          verbose=verbose
+      ))
+
+      reports.append(report(
+          title="Suspicious Paths",
+          description=f"Logs with suspicious paths",
+          logs=analyzer.find_sus_paths(),
           verbose=verbose
       ))
 
