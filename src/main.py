@@ -164,6 +164,14 @@ if __name__ == "__main__":
           verbose=verbose
       ))
 
+      sus_status = find_logs_with_approved_status(logs=logs, approved_status_codes=status_codes, inverse=True)
+      reports.append(report(
+          title="Suspicious Status",
+          description=f"Logs with HTTP status codes that are not {','.join(status_codes)}",
+          logs=sus_methods,
+          verbose=verbose
+      ))
+
       for report in reports:
           print(report)
       
