@@ -201,7 +201,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     
     parser = argparse.ArgumentParser(prog="Basset",description="Analyze your Nginx logs")
-    parser.add_argument("file")
+    parser.add_argument("-a", "--analysis", default="all", choices=['all', 'methods', 'status', 'paths'], help="The type of analysis to perform (defaults to 'all')")
+    parser.add_argument("-f", "--file", required=True, help="Path to the log file")
     parser.add_argument("-s", "--status", default=DEFAULT_STATUS, help="Specify normal HTTP status codes comma-separated")
     parser.add_argument("-m", "--methods", default=DEFAULT_METHODS, help="Specify normal HTTP methods comma-separated")
     parser.add_argument("-v", "--verbose", action="store_true", help="Show extensive reports")
@@ -223,26 +224,29 @@ if __name__ == "__main__":
       analyzer = LogAnalyzer(logs=get_logs(args.file), verbose=verbose)
       reports = []
 
-      reports.append(report(
-          title="Suspicious Methods",
-          description=f"Logs with HTTP methods that are not {','.join(methods)}",
-          logs=analyzer.find_logs_with_approved_methods(approved_methods=methods, inverse=True),
-          verbose=verbose
-      ))
+      if args.analysis == "all" or args.analysis == "methods":
+        reports.append(report(
+            title="Suspicious Methods",
+            description=f"Logs with HTTP methods that are not {','.join(methods)}",
+            logs=analyzer.find_logs_with_approved_methods(approved_methods=methods, inverse=True),
+            verbose=verbose
+        ))
 
-      reports.append(report(
-          title="Suspicious Status",
-          description=f"Logs with HTTP status codes that are not {','.join(status_codes)}",
-          logs=analyzer.find_logs_with_approved_status(approved_status_codes=status_codes, inverse=True),
-          verbose=verbose
-      ))
+      if args.analysis == "all" or args.analysis == "status":
+        reports.append(report(
+            title="Suspicious Status",
+            description=f"Logs with HTTP status codes that are not {','.join(status_codes)}",
+            logs=analyzer.find_logs_with_approved_status(approved_status_codes=status_codes, inverse=True),
+            verbose=verbose
+        ))
 
-      reports.append(report(
-          title="Suspicious Paths",
-          description=f"Logs with suspicious paths",
-          logs=analyzer.find_sus_paths(),
-          verbose=verbose
-      ))
+      if args.analysis == "all" or args.analysis == "paths":
+        reports.append(report(
+            title="Suspicious Paths",
+            description=f"Logs with suspicious paths",
+            logs=analyzer.find_sus_paths(),
+            verbose=verbose
+        ))
 
       for report in reports:
           print("\n==================")
