@@ -212,6 +212,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug logs")
 
     args = parser.parse_args()
+    analysis = args.analysis
     status_codes = args.status.split(",")
     methods = args.methods.split(",")
     verbose = args.verbose
@@ -219,15 +220,17 @@ if __name__ == "__main__":
 
     if debug:
       logger.setLevel(logging.DEBUG)
+      logger.debug(f"Config - Analysis: {analysis}")
       logger.debug(f"Config - Approved status: {status_codes}")
       logger.debug(f"Config - Approved methods: {methods}")
-      logger.debug(f"Config - Verbose: {debug}")
+      logger.debug(f"Config - Verbose: {verbose}")
+      logger.debug(f"Config - Debug: {debug}")
 
     try:
       analyzer = LogAnalyzer(logs=get_logs(args.file), verbose=verbose)
       reports = []
 
-      if args.analysis == "all" or args.analysis == "methods":
+      if analysis == "all" or analysis == "methods":
         reports.append(report(
             title="Suspicious Methods",
             description=f"Logs with HTTP methods that are not {','.join(methods)}",
@@ -235,7 +238,7 @@ if __name__ == "__main__":
             verbose=verbose
         ))
 
-      if args.analysis == "all" or args.analysis == "status":
+      if analysis == "all" or analysis == "status":
         reports.append(report(
             title="Suspicious Status",
             description=f"Logs with HTTP status codes that are not {','.join(status_codes)}",
@@ -243,7 +246,7 @@ if __name__ == "__main__":
             verbose=verbose
         ))
 
-      if args.analysis == "all" or args.analysis == "paths":
+      if analysis == "all" or analysis == "paths":
         reports.append(report(
             title="Suspicious Paths",
             description=f"Logs with suspicious paths",

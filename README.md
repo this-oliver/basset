@@ -1,30 +1,33 @@
-# basset
+# Basset
 
 [![CI/CD](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml/badge.svg)](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml)
 
 A bash script that reads your nginx access logs and generates a report of suspicious activity.
 
-## usage
+## Getting Started
+
+Pre-requisites:
+
+- Python 12+ installed
+
+## Usage
 
 > [!TIP]
 > If you are struggling with regex, you can use [regex101](https://regex101.com/) to test your regex patterns. The grep command uses PCRE regex, so make sure to select the correct flavor.
 
 ```bash
 # basic
-bash entrypoint.sh <log_file>
+python3 src/main.py -f access.log
 
-# get all requests that are not specifically '/foo/bar' or '/foo/baz' (use regex)
-bash entrypoint.sh access.log -p '\/foo\/(bar|baz)'
+# get all logs with paths that are not '/foo/bar' or '/foo/baz'
+python3 src/main.py -f access.log -p '/foo/bar' -p '/foo/baz'
 
 # get all requests that are not POST or GET requests (notice the comma)
-bash entrypoint.sh access.log -m 'POST,GET'
+python3 src/main.py -f access.log -m 'POST,GET'
 
 # get all requests that are not 200 or 301 status codes (notice the comma)
-bash entrypoint.sh access.log -s '200,301'
+python3 src/main.py -f access.log -s '200,301'
 ```
-
-> [!TIP]
-> If you want to see which paths are being excluded by default, test [this regex](https://regex101.com/r/8l0gyt/1) to see the paths that are being excluded by default. If you are not getting the behavior you expect, you can use the `-p` flag to override the default behavior with your own regex pattern.
 
 By default, the script will look for the following patterns:
 
@@ -41,10 +44,26 @@ By default, the script will look for the following patterns:
 For more options, run the script with the `-h` flag:
 
 ```bash
-bash entrypoint.sh -h
+python3 src/main.py -h
+
+#usage: Basset [-h] [-a {all,methods,status,paths}] -f FILE [-s STATUS] [-m METHODS] [-v] [-d]
+
+#Analyze your Nginx logs
+
+#options:
+#  -h, --help            show this help message and exit
+#  -a {all,methods,status,paths}, --analysis {all,methods,status,paths}
+#                        The type of analysis to perform (defaults to 'all')
+#  -f FILE, --file FILE  Path to the log file
+#  -s STATUS, --status STATUS
+#                        Specify normal HTTP status codes comma-separated
+#  -m METHODS, --methods METHODS
+#                        Specify normal HTTP methods comma-separated
+#  -v, --verbose         Show extensive reports
+#  -d, --debug           Show debug logs
 ```
 
-## contribution
+## Contribution
 
 the repository is open for contributions as long as they meet the following criteria:
 
