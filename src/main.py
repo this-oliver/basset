@@ -78,6 +78,9 @@ def extract_agent(log_line: str) -> Union[str, None]:
       return match[0] if match else "Unknown"
   return None
 
+def get_formatted_number(num: str) -> int:
+  return "{:,}".format(num)
+
 def get_logs(path: str) -> List[str]:
     if not os.path.exists(path):
        raise ValueError(f"File {path} does not exist")
@@ -104,7 +107,7 @@ def find_logs_with_approved_status(logs: List[str], approved_status_codes: List[
     elif inverse is False and current_status in approved_status_codes:
       matching_logs.append(log)
   return matching_logs
-   
+
 def report(title: str, description: str, logs: List[str], max_logs: int = 10, verbose: bool = False) -> str:
   count = len(logs)
 
@@ -119,7 +122,7 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
   
   if len(logs) > max_logs:
     logs = logs[:max_logs]
-    logs.append(f"... ({count - max_logs} more)")
+    logs.append(f"... ({get_formatted_number(count - max_logs)} more)")
 
   if len(logs) > 0:
     logs = "\n".join(logs)
@@ -127,7 +130,7 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
   else:
      logs = "No logs found"
 
-  return f"==========\nTitle: {title}\nDescription: {description}\n\n{logs}\n=========="
+  return f"Title: {title}\nDescription: {description}\n\n{logs}"
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -173,9 +176,10 @@ if __name__ == "__main__":
       ))
 
       for report in reports:
+          print("\n==================")
           print(report)
       
-      print(f"Total logs: {len(logs)}")
+      print(f"\n\nTotal logs: {get_formatted_number(len(logs))}")
     except ValueError as e:
         logger.error(f"error: {e}")
         parser.print_help()
