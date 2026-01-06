@@ -10,6 +10,19 @@ Pre-requisites:
 
 - Python 12+ installed
 
+Setup environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 ## Usage
 
 > [!TIP]
