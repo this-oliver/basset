@@ -30,16 +30,16 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 # basic
-python3 src/main.py -f access.log
+python3 main.py -f access.log
 
 # get all logs with paths that are not '/foo/bar' or '/foo/baz'
-python3 src/main.py -f access.log -p '/foo/bar' -p '/foo/baz'
+python3 main.py -f access.log -p '/foo/bar' -p '/foo/baz'
 
 # get all requests that are not POST or GET requests (notice the comma)
-python3 src/main.py -f access.log -m 'POST,GET'
+python3 main.py -f access.log -m 'POST,GET'
 
 # get all requests that are not 200 or 301 status codes (notice the comma)
-python3 src/main.py -f access.log -s '200,301'
+python3 main.py -f access.log -s '200,301'
 ```
 
 By default, the script will look for the following patterns:
@@ -57,7 +57,7 @@ By default, the script will look for the following patterns:
 For more options, run the script with the `-h` flag:
 
 ```bash
-python3 src/main.py -h
+python3 main.py -h
 
 #usage: Basset [-h] [-a {all,methods,status,paths}] -f FILE [-s STATUS] [-m METHODS] [-v] [-d]
 
