@@ -1,8 +1,8 @@
 # Basset
 
-[![CI/CD](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml/badge.svg)](https://github.com/this-oliver/basset/actions/workflows/cicd.yaml)
+[![CI](https://github.com/this-oliver/basset/actions/workflows/ci.yaml/badge.svg)](https://github.com/this-oliver/basset/actions/workflows/ci.yaml) [![CD](https://github.com/this-oliver/basset/actions/workflows/cd.yaml/badge.svg)](https://github.com/this-oliver/basset/actions/workflows/cd.yaml)
 
-A bash script that reads your nginx access logs and generates a report of suspicious activity.
+Analyze your Nginx logs for suspicious activity.
 
 ## Getting Started
 
