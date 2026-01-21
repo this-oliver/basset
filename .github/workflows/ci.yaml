@@ -20,7 +20,7 @@ jobs:
 
       - name: Scan for hard-coded secrets
         id: secrets
-        uses: trufflesecurity/trufflehog@ef6e76c3c4023279497fab4721ffa071a722fd05 # v3.92.4
+        uses: trufflesecurity/trufflehog@116e7171542d2f1dad8810f00dcfacbe0b809183 # v3.92.5
 
       - name: Scan for vulnerable dependencies
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
