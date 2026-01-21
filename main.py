@@ -38,11 +38,19 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
     # convert logs to objects
     logs = [extractor.to_object(log) for log in logs]
     
+    if verbose is False:
+      # shorten long paths in logs
+      MAX_CHARS = 50
+      for log in logs:
+        path = log.get('path')
+        if path and len(path) > MAX_CHARS:
+          log['path'] = path[:MAX_CHARS] + "..."
+    
     # extract logs and convert to dataframe
     df = pandas.DataFrame(logs)
     table = tabulate(df, headers=df.columns)
     
-    report += f"\nLogs:\n{table}\n\n-> [{count_message}]"
+    report += f"\n{table}\n\n-> [{count_message}]"
   else:
     report += "No logs found"
 
