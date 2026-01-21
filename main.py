@@ -1,6 +1,8 @@
 import os
 import logging
 import argparse
+import pandas
+from tabulate import tabulate
 from typing import List
 from src.analyzer import LogAnalyzer
 from src.extractor import LogExtractor
@@ -22,29 +24,29 @@ def report(title: str, description: str, logs: List[str], max_logs: int = 10, ve
   extractor = LogExtractor()
   count = len(logs)
 
-  if verbose is not True:
-    processed_logs = []
-    for log in logs:
-        ip = extractor.get_ip(log)
-        method = extractor.get_method(log)
-        path = extractor.get_path(log)
-        processed_logs.append(f"{ip} - {method} - {path}")
-    logs = processed_logs
+  report = f"Title: {title}\nDescription: {description}\n"
   
-  if len(logs) > max_logs and verbose is False:
-    logs = logs[:max_logs]
-    logs.append(f"... ({get_formatted_number(count - max_logs)} more)")
-  else:
-    logs.append(f"\n\n(Total: {get_formatted_number(len(logs))})")
-
 
   if len(logs) > 0:
-    logs = "\n".join(logs)
-    logs = f"Logs:\n{logs}"
-  else:
-    logs = "No logs found"
+    count_message = f"Total: {get_formatted_number(len(logs))}"
 
-  return f"Title: {title}\nDescription: {description}\n\n{logs}"
+    # trim logs if they exceed max defined logs
+    if max_logs is not None and len(logs) > max_logs and verbose is False:
+      logs = logs[:max_logs]
+      count_message = f"{get_formatted_number(count - max_logs)} more... "
+    
+    # convert logs to objects
+    logs = [extractor.to_object(log) for log in logs]
+    
+    # extract logs and convert to dataframe
+    df = pandas.DataFrame(logs)
+    table = tabulate(df, headers=df.columns)
+    
+    report += f"\nLogs:\n{table}\n\n-> [{count_message}]"
+  else:
+    report += "No logs found"
+
+  return report
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
